@@ -1,0 +1,36 @@
+name: Deploy production environment
+
+on:
+    push:
+        branches:
+            - main
+
+concurrency: production
+
+jobs:
+    build:
+        uses: ./.github/workflows/build.yaml
+
+    deploy:
+        needs: build
+        environment: production
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        steps:
+            - uses: actions/checkout@v3
+
+            - uses: LuisEnMarroquin/setup-ssh-action@v2.0.0
+              with:
+                  NAME: remote
+                  USER: ${{ secrets.SSH_USER }}
+                  ORIGIN: ${{ secrets.SSH_ORIGIN }}
+                  SSHKEY: ${{ secrets.SSH_PRIVATE_KEY }}
+
+            - run: echo $COMPOSE_ENV | base64 -d > .env
+              env:
+                  COMPOSE_ENV: ${{ secrets.PRODUCTION_COMPOSE_ENV }}
+
+            - run: |
+                  docker context create --docker host=ssh://remote remote
+                  docker context use remote
+                  docker compose up -d --build --pull=always
