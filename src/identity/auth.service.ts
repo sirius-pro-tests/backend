@@ -1,9 +1,15 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+    BadRequestException,
+    HttpException,
+    HttpStatus,
+    Injectable,
+    UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
 import { randomBytes, scrypt, timingSafeEqual } from 'crypto';
-import { TokenSchema } from './auth.schemas';
+import { TokenSchema } from './auth.dtos';
 import { UsersService } from './users.service';
 
 @Injectable()
@@ -19,7 +25,7 @@ export class AuthService {
             const user = await this.usersService.getByLogin(login);
 
             if (!(await this.comparePasswords(user.password, password))) {
-                throw new Error('Неверный пароль');
+                throw new UnauthorizedException('Неверный пароль');
             }
 
             const payload: TokenSchema = { userId: user.id };
@@ -29,12 +35,9 @@ export class AuthService {
                 secret: this.configService.get<string>('JWT_SECRET'),
             });
         } catch (error) {
-            console.log(error);
-            throw new HttpException(
-                'Неверный логин и/или пароль',
-                HttpStatus.UNAUTHORIZED,
-                { cause: error }
-            );
+            throw new UnauthorizedException('Неверный логин и/или пароль', {
+                cause: error,
+            });
         }
     }
 
@@ -49,11 +52,18 @@ export class AuthService {
     }): Promise<User> {
         const passwordHash = await this.hashPassword(password);
 
-        return this.usersService.create({
-            login,
-            passwordHash,
-            personals: { fullName },
-        });
+        try {
+            return this.usersService.create({
+                login,
+                passwordHash,
+                personals: { fullName },
+            });
+        } catch (error) {
+            throw new BadRequestException(
+                'Не удалось создать пользователя (вероятно такой логин уже занят)',
+                { cause: error }
+            );
+        }
     }
 
     private async hashPassword(password: string): Promise<string> {

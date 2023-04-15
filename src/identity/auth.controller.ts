@@ -10,13 +10,13 @@ import {
 import { zodToOpenAPI } from 'nestjs-zod';
 import { AuthService } from './auth.service';
 import {
+    SignInBodyDto,
     signInBodySchema,
-    SignInBodySchema,
     signInResponseSchema,
     SignInResponseSchema,
+    SignUpBodyDto,
     signUpBodySchema,
-    SignUpBodySchema,
-} from './auth.schemas';
+} from './auth.dtos';
 
 @Controller('auth')
 @ApiTags('Auth')
@@ -26,10 +26,10 @@ export class AuthController {
     @Post('signin')
     @ApiOperation({ description: 'Получить токен' })
     @ApiBody({ schema: zodToOpenAPI(signInBodySchema) })
-    @ApiUnauthorizedResponse()
+    @ApiUnauthorizedResponse({ description: 'Неверный логин и/или пароль' })
     @ApiOkResponse({ schema: zodToOpenAPI(signInResponseSchema) })
     async signIn(
-        @Body() { login, password }: SignInBodySchema
+        @Body() { login, password }: SignInBodyDto
     ): Promise<SignInResponseSchema> {
         const token = await this.authService.signIn(login, password);
         return { bearer: token };
@@ -40,11 +40,14 @@ export class AuthController {
         description: 'Создать пользователя',
     })
     @ApiBody({ schema: zodToOpenAPI(signUpBodySchema) })
-    @ApiBadRequestResponse()
+    @ApiBadRequestResponse({
+        description:
+            'Не удалось создать пользователя (вероятно такой логин уже занят)',
+    })
     @ApiOkResponse()
     async signUp(
-        @Body() { login, password, fullName }: SignUpBodySchema
+        @Body() { login, password, fullName }: SignUpBodyDto
     ): Promise<void> {
-        this.authService.signUp({ login, password, fullName });
+        await this.authService.signUp({ login, password, fullName });
     }
 }

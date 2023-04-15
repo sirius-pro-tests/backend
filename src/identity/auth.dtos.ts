@@ -1,3 +1,4 @@
+import { createZodDto } from 'nestjs-zod';
 import { z } from 'nestjs-zod/z';
 
 export type TokenSchema = z.infer<typeof tokenSchema>;
@@ -10,6 +11,7 @@ export const signInBodySchema = z.object({
     login: z.string(),
     password: z.string(),
 });
+export class SignInBodyDto extends createZodDto(signInBodySchema) {}
 
 export type SignInResponseSchema = z.infer<typeof signInResponseSchema>;
 export const signInResponseSchema = z.object({
@@ -22,3 +24,4 @@ export const signUpBodySchema = z.object({
     password: z.string(),
     fullName: z.string(),
 });
+export class SignUpBodyDto extends createZodDto(signUpBodySchema) {}

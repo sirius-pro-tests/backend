@@ -1,4 +1,11 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+    BadRequestException,
+    HttpException,
+    HttpStatus,
+    Injectable,
+    NotFoundException,
+    UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from 'nestjs-prisma';
 import { User } from '@prisma/client';
 
@@ -20,9 +27,8 @@ export class UsersService {
         });
 
         if (potential) {
-            throw new HttpException(
-                'Пользователь с таким логином уже существует',
-                HttpStatus.BAD_REQUEST
+            throw new BadRequestException(
+                'Пользователь с таким логином уже существует'
             );
         }
 
@@ -41,10 +47,7 @@ export class UsersService {
         });
 
         if (!user) {
-            throw new HttpException(
-                'Пользователь не найден',
-                HttpStatus.UNAUTHORIZED
-            );
+            throw new UnauthorizedException('Пользователь не найден');
         }
 
         return user;
@@ -56,10 +59,7 @@ export class UsersService {
         });
 
         if (!user) {
-            throw new HttpException(
-                'Пользователь не найден',
-                HttpStatus.NOT_FOUND
-            );
+            throw new NotFoundException('Пользователь не найден');
         }
 
         return user;
