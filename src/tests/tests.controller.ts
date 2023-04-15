@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import {
     ApiBearerAuth,
     ApiOkResponse,
@@ -7,9 +7,19 @@ import {
     ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { User } from '@prisma/client';
+import { zodToOpenAPI } from 'nestjs-zod';
 import { AuthGuard } from 'src/identity/auth.guard';
 import { InjectUser } from 'src/identity/user.decorator';
-import { TestsService } from 'src/tests/tests.service';
+import { TestsService } from './tests.service';
+import {
+    CreateTestBodyDto,
+    CreateTestResponseSchema,
+    GetInvitedTestsSchema,
+    GetOwnedTestsSchema,
+    getInvitedTestsSchema,
+    getOwnedTestsSchema,
+    createTestResponseSchema,
+} from './tests.dtos';
 
 @ApiTags('Tests')
 @ApiBearerAuth()
@@ -23,9 +33,20 @@ export class TestsController {
         description: 'Отдает тесты которые создал текущий пользователь',
     })
     @ApiUnauthorizedResponse()
-    @ApiOkResponse()
-    getOwned(@InjectUser() user: User) {
-        return this.testsService.getOwned(user);
+    @ApiOkResponse({ schema: zodToOpenAPI(getOwnedTestsSchema) })
+    async getOwned(
+        @InjectUser() user: User
+    ): Promise<Array<GetOwnedTestsSchema>> {
+        const owned = await this.testsService.getOwned(user);
+
+        return owned.map(
+            ({ id, description, title, author }): GetOwnedTestsSchema => ({
+                id,
+                title,
+                description,
+                author: { id: author.id, fullName: author.fullName },
+            })
+        );
     }
 
     @Get('invited')
@@ -33,8 +54,38 @@ export class TestsController {
         description: 'Отдает тесты в которые пригласили пользователя',
     })
     @ApiUnauthorizedResponse()
-    @ApiOkResponse()
-    getInvited(@InjectUser() user: User) {
-        return this.testsService.getInvited(user);
+    @ApiOkResponse({ schema: zodToOpenAPI(getInvitedTestsSchema) })
+    async getInvited(
+        @InjectUser() user: User
+    ): Promise<Array<GetInvitedTestsSchema>> {
+        const invited = await this.testsService.getInvited(user);
+
+        return invited.map(
+            ({ id, description, title, author }): GetInvitedTestsSchema => ({
+                id,
+                title,
+                description,
+                author: { id: author.id, fullName: author.fullName },
+            })
+        );
+    }
+
+    @Post()
+    @ApiOperation({ description: 'Создает тест' })
+    @ApiUnauthorizedResponse()
+    @ApiOkResponse({ schema: zodToOpenAPI(createTestResponseSchema) })
+    async create(
+        @InjectUser() user: User,
+        @Body() body: CreateTestBodyDto
+    ): Promise<CreateTestResponseSchema> {
+        const { id, title, description, author } =
+            await this.testsService.create(user, body.title, body.description);
+
+        return {
+            id,
+            title,
+            description,
+            author: { id: author.id, fullName: author.fullName },
+        };
     }
 }

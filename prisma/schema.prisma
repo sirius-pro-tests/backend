@@ -23,6 +23,8 @@ model Test {
   questions        Question[]
   userInvitedTests UserInvitedTests[]
   sessions         Session[]
+  title            String
+  description      String
 }
 
 model UserInvitedTests {
