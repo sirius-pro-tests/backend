@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
     api:
-        build: .
+        image: ghcr.io/sirius-pro-tests/backend
         restart: always
         environment:
             DATABASE_URL: ${DATABASE_URL}

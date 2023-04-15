@@ -1,4 +1,5 @@
 .env*
+inventory.cfg
 
 # compiled output
 /dist

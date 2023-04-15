@@ -1,0 +1,34 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+      - apt:
+            name: certbot
+            state: latest
+
+      - apt:
+            name: python3-certbot-nginx
+            state: latest
+
+      - stat:
+            path: /etc/letsencypt/live/{{ domain }}/cert.pem
+        register: cert_exists
+
+      - template:
+            src: '{{ template }}'
+            dest: '/etc/nginx/sites-available/{{ domain }}'
+        when: not cert_exists.stat.exists
+
+      - file:
+            src: '/etc/nginx/sites-available/{{ domain }}'
+            dest: '/etc/nginx/sites-enabled/{{ domain }}'
+            state: link
+        when: not cert_exists.stat.exists
+
+      - shell: 'certbot --nginx -d {{ domain }} -n --email {{ email }} --redirect --agree-tos'
+        when: not cert_exists.stat.exists
+
+      - service:
+            name: nginx
+            state: restarted
+        when: not cert_exists.stat.exists
