@@ -8,21 +8,51 @@ export class UsersService {
 
     async create({
         login,
-        password,
+        passwordHash,
         personals,
     }: {
         login: string;
-        password: string;
+        passwordHash: string;
         personals: { fullName: string };
     }): Promise<User> {
+        const potential = await this.prisma.user.findFirst({
+            where: { username: login },
+        });
+
+        if (potential) {
+            throw new HttpException(
+                'Пользователь с таким логином уже существует',
+                HttpStatus.BAD_REQUEST
+            );
+        }
+
         return this.prisma.user.create({
-            data: { username: login, password, fullName: personals.fullName },
+            data: {
+                username: login,
+                password: passwordHash,
+                fullName: personals.fullName,
+            },
         });
     }
 
     async getById(userId: number): Promise<User> {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
+        });
+
+        if (!user) {
+            throw new HttpException(
+                'Пользователь не найден',
+                HttpStatus.UNAUTHORIZED
+            );
+        }
+
+        return user;
+    }
+
+    async getByLogin(login: string): Promise<User> {
+        const user = await this.prisma.user.findFirst({
+            where: { username: login },
         });
 
         if (!user) {

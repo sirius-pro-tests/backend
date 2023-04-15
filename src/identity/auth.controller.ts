@@ -1,5 +1,14 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { UsersService } from 'src/identity/users.service';
+import {
+    ApiBadRequestResponse,
+    ApiBody,
+    ApiOkResponse,
+    ApiOperation,
+    ApiTags,
+    ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
+import { zodToOpenAPI } from 'nestjs-zod';
+import { AuthService } from './auth.service';
 import {
     signInBodySchema,
     SignInBodySchema,
@@ -7,21 +16,17 @@ import {
     SignInResponseSchema,
     signUpBodySchema,
     SignUpBodySchema,
-} from 'src/identity/auth.schemas';
-import { AuthService } from 'src/identity/auth.service';
-import { ApiBody, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { zodToOpenAPI } from 'nestjs-zod';
+} from './auth.schemas';
 
 @Controller('auth')
 @ApiTags('Auth')
 export class AuthController {
-    constructor(
-        private readonly usersService: UsersService,
-        private readonly authService: AuthService
-    ) {}
+    constructor(private readonly authService: AuthService) {}
 
     @Post('signin')
+    @ApiOperation({ description: 'Получить токен' })
     @ApiBody({ schema: zodToOpenAPI(signInBodySchema) })
+    @ApiUnauthorizedResponse()
     @ApiOkResponse({ schema: zodToOpenAPI(signInResponseSchema) })
     async signIn(
         @Body() { login, password }: SignInBodySchema
@@ -31,10 +36,15 @@ export class AuthController {
     }
 
     @Post('signup')
+    @ApiOperation({
+        description: 'Создать пользователя',
+    })
     @ApiBody({ schema: zodToOpenAPI(signUpBodySchema) })
+    @ApiBadRequestResponse()
+    @ApiOkResponse()
     async signUp(
         @Body() { login, password, fullName }: SignUpBodySchema
     ): Promise<void> {
-        this.usersService.create({ login, password, personals: { fullName } });
+        this.authService.signUp({ login, password, fullName });
     }
 }

@@ -1,38 +1,59 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { PrismaService } from 'nestjs-prisma';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { User } from '@prisma/client';
 import { randomBytes, scrypt, timingSafeEqual } from 'crypto';
-import { TokenSchema } from 'src/identity/auth.schemas';
+import { TokenSchema } from './auth.schemas';
+import { UsersService } from './users.service';
 
 @Injectable()
 export class AuthService {
     constructor(
-        private readonly prisma: PrismaService,
-        private readonly jwt: JwtService
+        private readonly jwt: JwtService,
+        private readonly usersService: UsersService,
+        private readonly configService: ConfigService
     ) {}
 
     async signIn(login: string, password: string): Promise<string> {
-        const user = await this.prisma.user.findFirst({
-            where: { username: login },
-        });
+        try {
+            const user = await this.usersService.getByLogin(login);
 
-        if (!user) {
-            throw new HttpException(
-                'Пользователь не найден',
-                HttpStatus.UNAUTHORIZED
-            );
-        }
+            if (!(await this.comparePasswords(user.password, password))) {
+                throw new Error('Неверный пароль');
+            }
 
-        if (!(await this.comparePasswords(user.password, password))) {
+            const payload: TokenSchema = { userId: user.id };
+
+            return await this.jwt.signAsync(payload, {
+                algorithm: 'HS256',
+                secret: this.configService.get<string>('JWT_SECRET'),
+            });
+        } catch (error) {
+            console.log(error);
             throw new HttpException(
                 'Неверный логин и/или пароль',
-                HttpStatus.UNAUTHORIZED
+                HttpStatus.UNAUTHORIZED,
+                { cause: error }
             );
         }
+    }
 
-        const payload: TokenSchema = { userId: user.id };
+    async signUp({
+        login,
+        password,
+        fullName,
+    }: {
+        login: string;
+        password: string;
+        fullName: string;
+    }): Promise<User> {
+        const passwordHash = await this.hashPassword(password);
 
-        return this.jwt.sign(payload);
+        return this.usersService.create({
+            login,
+            passwordHash,
+            personals: { fullName },
+        });
     }
 
     private async hashPassword(password: string): Promise<string> {
@@ -63,6 +84,7 @@ export class AuthService {
                 if (error) {
                     reject(error);
                 }
+
                 resolve(key);
             })
         );
