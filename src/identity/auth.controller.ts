@@ -16,6 +16,8 @@ import {
     SignInResponseSchema,
     SignUpBodyDto,
     signUpBodySchema,
+    signUpBadRequestErrorScheme,
+    signInUnauthorizedErrorScheme,
 } from './auth.dtos';
 
 @Controller('auth')
@@ -26,7 +28,9 @@ export class AuthController {
     @Post('signin')
     @ApiOperation({ description: 'Получить токен' })
     @ApiBody({ schema: zodToOpenAPI(signInBodySchema) })
-    @ApiUnauthorizedResponse({ description: 'Неверный логин и/или пароль' })
+    @ApiUnauthorizedResponse({
+        schema: zodToOpenAPI(signInUnauthorizedErrorScheme),
+    })
     @ApiOkResponse({ schema: zodToOpenAPI(signInResponseSchema) })
     async signIn(
         @Body() { login, password }: SignInBodyDto
@@ -43,6 +47,7 @@ export class AuthController {
     @ApiBadRequestResponse({
         description:
             'Не удалось создать пользователя (вероятно такой логин уже занят)',
+        schema: zodToOpenAPI(signUpBadRequestErrorScheme),
     })
     @ApiOkResponse()
     async signUp(

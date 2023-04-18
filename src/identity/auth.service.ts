@@ -25,7 +25,9 @@ export class AuthService {
             const user = await this.usersService.getByLogin(login);
 
             if (!(await this.comparePasswords(user.password, password))) {
-                throw new UnauthorizedException('Неверный пароль');
+                throw new UnauthorizedException('Неверный пароль', {
+                    description: 'BAD_CREDS',
+                });
             }
 
             const payload: TokenSchema = { userId: user.id };
@@ -36,6 +38,7 @@ export class AuthService {
             });
         } catch (error) {
             throw new UnauthorizedException('Неверный логин и/или пароль', {
+                description: 'BAD_CREDS',
                 cause: error,
             });
         }
@@ -61,7 +64,7 @@ export class AuthService {
         } catch (error) {
             throw new BadRequestException(
                 'Не удалось создать пользователя (вероятно такой логин уже занят)',
-                { cause: error }
+                { cause: error, description: 'LOGIN_IS_BUSY' }
             );
         }
     }

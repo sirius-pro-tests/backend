@@ -1,8 +1,6 @@
 import {
-    BadRequestException,
-    HttpException,
-    HttpStatus,
     Injectable,
+    BadRequestException,
     NotFoundException,
     UnauthorizedException,
 } from '@nestjs/common';
@@ -28,7 +26,8 @@ export class UsersService {
 
         if (potential) {
             throw new BadRequestException(
-                'Пользователь с таким логином уже существует'
+                'Пользователь с таким логином уже существует',
+                { description: 'LOGIN_IS_BUSY' }
             );
         }
 
@@ -47,7 +46,9 @@ export class UsersService {
         });
 
         if (!user) {
-            throw new UnauthorizedException('Пользователь не найден');
+            throw new UnauthorizedException('Пользователь не найден', {
+                description: 'USER_NOT_FOUND',
+            });
         }
 
         return user;
@@ -59,7 +60,9 @@ export class UsersService {
         });
 
         if (!user) {
-            throw new NotFoundException('Пользователь не найден');
+            throw new NotFoundException('Пользователь не найден', {
+                description: 'USER_NOT_FOUND',
+            });
         }
 
         return user;

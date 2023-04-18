@@ -28,4 +28,22 @@ export class TestsService {
             include: { author: true },
         });
     }
+
+    async isAuthor(
+        authorId: Test['authorId'],
+        testId: Test['id']
+    ): Promise<boolean> {
+        const test = await this.prisma.test.findUnique({
+            where: { id: testId },
+        });
+
+        return test?.authorId === authorId;
+    }
+
+    async isExists(testId: Test['id']): Promise<boolean> {
+        return (
+            (await this.prisma.test.findUnique({ where: { id: testId } })) !==
+            null
+        );
+    }
 }

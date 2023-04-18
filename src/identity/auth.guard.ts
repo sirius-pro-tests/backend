@@ -33,6 +33,7 @@ export class AuthGuard implements CanActivate {
             return true;
         } catch (error) {
             throw new UnauthorizedException('Верификация токена не удалась', {
+                description: 'BAD_BEARER',
                 cause: error,
             });
         }
@@ -42,7 +43,9 @@ export class AuthGuard implements CanActivate {
         const [type, token] = request.headers.authorization?.split(' ') ?? [];
 
         if (type !== 'Bearer') {
-            throw new UnauthorizedException('Неверный тип токена');
+            throw new UnauthorizedException('Неверный тип токена', {
+                description: 'BAD_BEARER',
+            });
         }
 
         return token;

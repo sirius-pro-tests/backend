@@ -22,9 +22,9 @@ model Test {
   authorId         Int
   questions        Question[]
   userInvitedTests UserInvitedTests[]
-  sessions         Session[]
   title            String
   description      String
+  Attempt          Attempt[]
 }
 
 model UserInvitedTests {
@@ -37,25 +37,16 @@ model UserInvitedTests {
 }
 
 model Question {
-  id      Int      @id @default(autoincrement())
-  test    Test     @relation(fields: [testId], references: [id])
-  testId  Int
+  id      Int    @id @default(autoincrement())
+  title   String
   payload Json
-  answers Answer[]
-}
-
-model Session {
-  id      Int      @id @default(autoincrement())
-  test    Test     @relation(fields: [testId], references: [id])
+  test    Test   @relation(fields: [testId], references: [id])
   testId  Int
-  answers Answer[]
 }
 
-model Answer {
-  id         Int      @id @default(autoincrement())
-  session    Session  @relation(fields: [sessionId], references: [id])
-  sessionId  Int
-  variantId  String
-  question   Question @relation(fields: [questionId], references: [id])
-  questionId Int
+model Attempt {
+  id      Int  @id @default(autoincrement())
+  test    Test @relation(fields: [testId], references: [id])
+  testId  Int
+  results Json
 }

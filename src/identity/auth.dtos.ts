@@ -25,3 +25,11 @@ export const signUpBodySchema = z.object({
     fullName: z.string(),
 });
 export class SignUpBodyDto extends createZodDto(signUpBodySchema) {}
+
+export const signUpBadRequestErrorScheme = z.object({
+    error: z.literal('LOGIN_IS_BUSY'),
+});
+
+export const signInUnauthorizedErrorScheme = z.object({
+    error: z.literal('BAD_CREDS'),
+});
