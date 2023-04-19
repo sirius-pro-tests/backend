@@ -43,6 +43,29 @@ export class TestsService {
         return test;
     }
 
+    async deleteTestById(testId: Test['id']) {
+        const deleteQuestions = this.prisma.question.deleteMany({
+            where: { testId },
+        });
+
+        const deleteAttempts = this.prisma.attempt.deleteMany({
+            where: { testId },
+        });
+
+        const deleteInvites = this.prisma.userInvitedTests.deleteMany({
+            where: { testId },
+        });
+
+        const deleteTest = this.prisma.test.delete({ where: { id: testId } });
+
+        await this.prisma.$transaction([
+            deleteQuestions,
+            deleteAttempts,
+            deleteInvites,
+            deleteTest,
+        ]);
+    }
+
     async isAuthor(
         authorId: Test['authorId'],
         testId: Test['id']

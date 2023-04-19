@@ -1,6 +1,17 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Delete,
+    ForbiddenException,
+    Get,
+    NotFoundException,
+    Param,
+    Post,
+    UseGuards,
+} from '@nestjs/common';
 import {
     ApiBearerAuth,
+    ApiNotFoundResponse,
     ApiOkResponse,
     ApiOperation,
     ApiTags,
@@ -87,5 +98,20 @@ export class TestsController {
             description,
             author: { id: author.id, fullName: author.fullName },
         };
+    }
+
+    @Delete(':id')
+    @ApiOperation({ description: 'Удаляет тест' })
+    @ApiUnauthorizedResponse()
+    @ApiNotFoundResponse()
+    @ApiOkResponse()
+    async delete(@InjectUser() user: User, @Param('id') testId: string) {
+        const test = await this.testsService.getById(Number(testId));
+
+        if (!(await this.testsService.isAuthor(user.id, test.id))) {
+            throw new ForbiddenException('Вы не автор теста');
+        }
+
+        await this.testsService.deleteTestById(Number(testId));
     }
 }
