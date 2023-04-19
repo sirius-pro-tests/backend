@@ -14,7 +14,7 @@ import {
 import { User } from '@prisma/client';
 import { AuthGuard } from 'src/identity/auth.guard';
 import { InjectUser } from 'src/identity/user.decorator';
-import { TestsService } from './tests.service';
+import { TestsService } from '../tests.service';
 import { QuestionsService } from './questions.service';
 import {
     questionPayloadOmittedSchema,
@@ -76,6 +76,7 @@ export class QuestionsController {
     }
 
     @Post(':id/questions')
+    @ApiOperation({ description: 'Сабмитает ответы на вопросы' })
     @ApiParam({ name: 'id', description: 'ID теста' })
     @ApiBody({ schema: zodToOpenAPI(createQuestionBodySchema) })
     @ApiUnauthorizedResponse()

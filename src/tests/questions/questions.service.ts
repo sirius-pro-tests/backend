@@ -5,7 +5,11 @@ import {
 } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from 'nestjs-prisma';
-import { QuestionPayloadOmittedSchema } from 'src/tests/question.schema';
+import {
+    questionFullSchema,
+    QuestionFullSchema,
+    QuestionPayloadOmittedSchema,
+} from 'src/tests/questions/question.schema';
 import { TestsService } from 'src/tests/tests.service';
 
 @Injectable()
@@ -16,11 +20,7 @@ export class QuestionsService {
     ) {}
 
     async getQuestions(testId: number) {
-        if (!(await this.testsService.isExists(testId))) {
-            throw new NotFoundException('Тест не найден', {
-                description: 'TEST_NOT_FOUND',
-            });
-        }
+        await this.testsService.getById(testId);
 
         const questions = await this.prisma.question.findMany({
             where: { testId },
@@ -29,17 +29,21 @@ export class QuestionsService {
         return questions;
     }
 
+    async getQuestionsSchemas(testId: number): Promise<QuestionFullSchema[]> {
+        const questions = await this.getQuestions(testId);
+
+        return questions.map(({ id, title, payload }) =>
+            questionFullSchema.parse({ id, title, payload })
+        );
+    }
+
     async createQuestion(
         testId: number,
         userId: User['id'],
         payload: QuestionPayloadOmittedSchema,
         title: string
     ) {
-        if (!(await this.testsService.isExists(testId))) {
-            throw new NotFoundException('Тест не найден', {
-                description: 'TEST_NOT_FOUND',
-            });
-        }
+        await this.testsService.getById(testId);
 
         if (!(await this.testsService.isAuthor(userId, testId))) {
             throw new ForbiddenException('Вы не являетесь автором теста', {

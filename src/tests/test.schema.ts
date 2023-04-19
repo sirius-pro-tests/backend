@@ -1,6 +1,6 @@
 import { z } from 'nestjs-zod/z';
 import { userSchema } from 'src/identity/user.schema';
-import { questionFullSchema } from './question.schema';
+import { questionFullSchema } from './questions/question.schema';
 
 export const testSchema = z.object({
     id: z.number().int(),

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Test, User } from '@prisma/client';
 import { PrismaService } from 'nestjs-prisma';
 
@@ -29,6 +29,20 @@ export class TestsService {
         });
     }
 
+    async getById(testId: Test['id']) {
+        const test = await this.prisma.test.findUnique({
+            where: { id: testId },
+        });
+
+        if (!test) {
+            throw new NotFoundException('Тест не найден', {
+                description: 'TEST_NOT_FOUND',
+            });
+        }
+
+        return test;
+    }
+
     async isAuthor(
         authorId: Test['authorId'],
         testId: Test['id']
@@ -38,12 +52,5 @@ export class TestsService {
         });
 
         return test?.authorId === authorId;
-    }
-
-    async isExists(testId: Test['id']): Promise<boolean> {
-        return (
-            (await this.prisma.test.findUnique({ where: { id: testId } })) !==
-            null
-        );
     }
 }
