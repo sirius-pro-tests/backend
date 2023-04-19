@@ -1,6 +1,7 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { APP_PIPE } from '@nestjs/core';
+import { HttpException, Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import { SentryInterceptor, SentryModule } from '@ntegral/nestjs-sentry';
 import { PrismaModule } from 'nestjs-prisma';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'nestjs-zod/z';
@@ -11,6 +12,7 @@ const envConfigScheme = z.object({
     DATABASE_URL: z.string(),
     API_PORT: z.string(),
     JWT_SECRET: z.string(),
+    SENTRY_DSN: z.string(),
 });
 
 @Module({
@@ -22,6 +24,16 @@ const envConfigScheme = z.object({
         PrismaModule.forRoot({
             isGlobal: true,
         }),
+        SentryModule.forRootAsync({
+            inject: [ConfigService],
+            useFactory: (configService: ConfigService) => ({
+                dsn: configService.get<string>('SENTRY_DSN'),
+                tracesSampleRate: 1.0,
+                close: {
+                    enabled: true,
+                },
+            }),
+        }),
         IdentityModule,
         TestsModule,
     ],
@@ -29,6 +41,19 @@ const envConfigScheme = z.object({
         {
             provide: APP_PIPE,
             useClass: ZodValidationPipe,
+        },
+        {
+            provide: APP_INTERCEPTOR,
+            useFactory: () =>
+                new SentryInterceptor({
+                    filters: [
+                        {
+                            type: HttpException,
+                            filter: (exception: HttpException) =>
+                                exception.getStatus() < 500,
+                        },
+                    ],
+                }),
         },
     ],
 })

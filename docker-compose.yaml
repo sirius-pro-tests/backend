@@ -8,6 +8,7 @@ services:
             DATABASE_URL: ${DATABASE_URL}
             JWT_SECRET: ${JWT_SECRET}
             API_PORT: ${API_PORT}
+            SENTRY_DSN: ${SENTRY_DSN}
         ports:
             - ${API_PORT}:${API_PORT}
 

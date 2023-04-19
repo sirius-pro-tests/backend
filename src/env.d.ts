@@ -4,6 +4,7 @@ declare global {
             DATABASE_URL: string;
             API_PORT: string;
             JWT_SECRET: string;
+            SENTRY_DSN: string;
         }
     }
 }
