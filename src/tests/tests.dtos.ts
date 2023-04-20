@@ -16,3 +16,6 @@ export type GetOwnedTestsSchema = z.infer<typeof getOwnedTestsSchema>;
 
 export const getInvitedTestsSchema = testSchema.omit({ questions: true });
 export type GetInvitedTestsSchema = z.infer<typeof getInvitedTestsSchema>;
+
+export const getTestByIdSchema = z.array(testSchema.omit({ questions: true }));
+export type GetTestByIdSchema = z.infer<typeof getInvitedTestsSchema>;

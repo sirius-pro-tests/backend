@@ -32,6 +32,7 @@ export class TestsService {
     async getById(testId: Test['id']) {
         const test = await this.prisma.test.findUnique({
             where: { id: testId },
+            include: { author: true },
         });
 
         if (!test) {

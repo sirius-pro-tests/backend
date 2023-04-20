@@ -25,11 +25,12 @@ import { TestsService } from './tests.service';
 import {
     CreateTestBodyDto,
     CreateTestResponseSchema,
-    GetInvitedTestsSchema,
+    GetTestByIdSchema,
     GetOwnedTestsSchema,
     getInvitedTestsSchema,
     getOwnedTestsSchema,
     createTestResponseSchema,
+    getTestByIdSchema,
 } from './tests.dtos';
 
 @ApiTags('Tests')
@@ -68,17 +69,35 @@ export class TestsController {
     @ApiOkResponse({ schema: zodToOpenAPI(getInvitedTestsSchema) })
     async getInvited(
         @InjectUser() user: User
-    ): Promise<Array<GetInvitedTestsSchema>> {
+    ): Promise<Array<GetTestByIdSchema>> {
         const invited = await this.testsService.getInvited(user);
 
         return invited.map(
-            ({ id, description, title, author }): GetInvitedTestsSchema => ({
+            ({ id, description, title, author }): GetTestByIdSchema => ({
                 id,
                 title,
                 description,
                 author: { id: author.id, fullName: author.fullName },
             })
         );
+    }
+
+    @Get(':id')
+    @ApiOperation({ description: 'Отдает информацию о тесте по ID' })
+    @ApiUnauthorizedResponse()
+    @ApiOkResponse({ schema: zodToOpenAPI(getTestByIdSchema) })
+    async getById(@Param('id') testId: string): Promise<GetTestByIdSchema> {
+        const test = await this.testsService.getById(Number(testId));
+
+        return {
+            id: test.id,
+            title: test.title,
+            description: test.description,
+            author: {
+                id: test.author.id,
+                fullName: test.author.fullName,
+            },
+        };
     }
 
     @Post()
