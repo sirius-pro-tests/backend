@@ -43,7 +43,7 @@ export class AttemptsController {
             user.id
         );
 
-        return getResultResponseSchema.parse(result);
+        return getResultResponseSchema.parse(result.results);
     }
 
     @Post(':id/attempt')
