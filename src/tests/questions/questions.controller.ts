@@ -76,7 +76,7 @@ export class QuestionsController {
     }
 
     @Post(':id/questions')
-    @ApiOperation({ description: 'Сабмитает ответы на вопросы' })
+    @ApiOperation({ description: 'Добавляет вопрос в тест' })
     @ApiParam({ name: 'id', description: 'ID теста' })
     @ApiBody({ schema: zodToOpenAPI(createQuestionBodySchema) })
     @ApiUnauthorizedResponse()
