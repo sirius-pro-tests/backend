@@ -31,6 +31,8 @@ import {
     getOwnedTestsSchema,
     createTestResponseSchema,
     getTestByIdSchema,
+    GetSubmittedTestsSchema,
+    getSubmittedTestsSchema,
 } from './tests.dtos';
 
 @ApiTags('Tests')
@@ -64,6 +66,7 @@ export class TestsController {
     @Get('invited')
     @ApiOperation({
         description: 'Отдает тесты в которые пригласили пользователя',
+        deprecated: true,
     })
     @ApiUnauthorizedResponse()
     @ApiOkResponse({ schema: zodToOpenAPI(getInvitedTestsSchema) })
@@ -80,6 +83,24 @@ export class TestsController {
                 author: { id: author.id, fullName: author.fullName },
             })
         );
+    }
+
+    @Get('submitted')
+    @ApiOkResponse({ schema: zodToOpenAPI(getSubmittedTestsSchema) })
+    async getSubmitted(
+        @InjectUser() user: User
+    ): Promise<GetSubmittedTestsSchema> {
+        const tests = await this.testsService.getSubmitted(user.id);
+
+        return tests.map((test) => ({
+            id: test.id,
+            title: test.title,
+            description: test.description,
+            author: {
+                id: test.author.id,
+                fullName: test.author.fullName,
+            },
+        }));
     }
 
     @Get(':id')

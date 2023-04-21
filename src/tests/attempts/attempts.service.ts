@@ -56,7 +56,6 @@ export class AttemptsService {
             );
 
             if (!question) {
-                console.log(submitted, questions);
                 throw new InternalServerErrorException(
                     'Прислан ответ на несуществующий вопрос'
                 );

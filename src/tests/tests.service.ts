@@ -22,6 +22,13 @@ export class TestsService {
         return userInvitedTests.map((userInvitedTest) => userInvitedTest.test);
     }
 
+    async getSubmitted(userId: User['id']) {
+        return this.prisma.test.findMany({
+            where: { Attempt: { every: { userId } } },
+            include: { author: true },
+        });
+    }
+
     async create(author: User, title: string, description: string) {
         return this.prisma.test.create({
             data: { authorId: author.id, description, title },

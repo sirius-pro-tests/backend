@@ -64,8 +64,6 @@ export class AttemptsController {
             submitted
         );
 
-        console.log(results);
-
         return getResultResponseSchema.parse(results);
     }
 }
