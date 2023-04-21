@@ -50,7 +50,18 @@ export class AttemptsService {
             testId
         );
 
-        const results: AttemptAnswerSchema[] = questions.map((question) => {
+        const results: AttemptAnswerSchema[] = submitted.map((submit) => {
+            const question = questions.find(
+                (question) => submit.title === question.title
+            );
+
+            if (!question) {
+                console.log(submitted, questions);
+                throw new InternalServerErrorException(
+                    'Прислан ответ на несуществующий вопрос'
+                );
+            }
+
             const right = question.payload.variants.find(
                 (variant) => variant.right === true
             );
@@ -61,20 +72,10 @@ export class AttemptsService {
                 );
             }
 
-            const answer = submitted.find(
-                (submit) => submit.title === question.title
-            );
-
-            if (!answer) {
-                throw new InternalServerErrorException(
-                    'Прислан ответ на несуществующий вопрос'
-                );
-            }
-
             return {
                 question: question.title,
-                answer: answer.answer,
-                right: answer.answer === right.answer,
+                answer: submit.answer,
+                right: submit.answer === right.answer,
             };
         });
 

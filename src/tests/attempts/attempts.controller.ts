@@ -16,6 +16,7 @@ import { InjectUser } from 'src/identity/user.decorator';
 import {
     getResultResponseSchema,
     GetResultResponseSchema,
+    SubmitResultBodyDto,
     SubmitResultBodySchema,
     submitResultBodySchema,
 } from 'src/tests/attempts/attempts.dtos';
@@ -55,7 +56,7 @@ export class AttemptsController {
     async submitAttempt(
         @Param('id') testId: string,
         @InjectUser() user: User,
-        @Body() submitted: SubmitResultBodySchema
+        @Body() submitted: SubmitResultBodyDto
     ): Promise<GetResultResponseSchema> {
         const { results } = await this.attemptsService.submitResult(
             Number(testId),
